@@ -2,10 +2,113 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <title>Companhia teste</title>
+    <title>Companhia, seu amigo de conversa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, Arial,
+          sans-serif;
+        background: radial-gradient(circle at top, #f2f5ff, #d7e0ff);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card {
+        background: #ffffff;
+        padding: 24px 28px;
+        border-radius: 20px;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        font-size: 14px;
+        color: #444444;
+        margin-bottom: 16px;
+      }
+
+      .status {
+        font-size: 13px;
+        color: #777777;
+        min-height: 18px;
+        margin-bottom: 12px;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #1f3c78;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      button[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #22c55e;
+        animation: pulse 1.4s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.4);
+          opacity: 0.4;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
+
   <body>
-    <h1>Companhia no ar</h1>
-    <p>Se você está vendo isso, o site subiu.</p>
-  </body>
-</html>
+    <div class="card">
+      <h1>Companhia</h1>
+      <p>
+        Clique no botão para conversar com o seu assistente de voz direto pelo
+        navegador.
+      </p>
+
+      <div id="status" class="status"></div>
+
+      <button id="talk-button">
+        <span>Falar com o Companhia</span>
+      </button>
+    </div>
+
+    <script>
+      // Usa o caminho relativo da function, serve para qualquer domínio Netlify
