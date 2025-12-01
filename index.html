@@ -110,5 +110,88 @@
       </button>
     </div>
 
-    <script>
-      // Usa o caminho relativo da function, serve para qualquer domínio Netlify
+    <!-- Script em módulo, mais simples e direto -->
+    <script type="module">
+      import { RetellWebClient } from "https://esm.run/retell-client-js-sdk@2.0.7";
+
+      const CREATE_CALL_URL = "/.netlify/functions/create-web-call";
+
+      const button = document.getElementById("talk-button");
+      const statusEl = document.getElementById("status");
+
+      const retellWebClient = new RetellWebClient();
+
+      async function createWebCallSession() {
+        const resp = await fetch(CREATE_CALL_URL, {
+          method: "POST",
+        });
+
+        if (!resp.ok) {
+          const txt = await resp.text();
+          throw new Error(
+            "Erro ao criar web call: " + resp.status + " " + txt
+          );
+        }
+
+        return resp.json(); // { access_token, call_id }
+      }
+
+      async function startCompanhiaCall() {
+        try {
+          statusEl.textContent = "Conectando com o Companhia...";
+          button.disabled = true;
+          button.innerHTML = "<span>Conectando...</span>";
+
+          const session = await createWebCallSession();
+          const { access_token } = session;
+
+          retellWebClient.on("call_started", () => {
+            statusEl.innerHTML =
+              '<span class="dot"></span> Conversa em andamento';
+            button.disabled = false;
+            button.innerHTML = "<span>Encerrar conversa</span>";
+            button.dataset.inCall = "true";
+          });
+
+          retellWebClient.on("call_ended", () => {
+            statusEl.textContent = "Conversa encerrada";
+            button.disabled = false;
+            button.innerHTML = "<span>Falar com o Companhia</span>";
+            button.dataset.inCall = "false";
+          });
+
+          retellWebClient.on("error", (err) => {
+            console.error("Erro na call Retell:", err);
+            statusEl.textContent =
+              "Ocorreu um erro na chamada, tente novamente.";
+            button.disabled = false;
+            button.innerHTML = "<span>Falar com o Companhia</span>";
+            button.dataset.inCall = "false";
+          });
+
+          await retellWebClient.startCall({
+            accessToken: access_token,
+          });
+
+          window._companhiaSdk = retellWebClient;
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent =
+            "Não deu para conectar com o Companhia agora.";
+          button.disabled = false;
+          button.innerHTML = "<span>Falar com o Companhia</span>";
+          button.dataset.inCall = "false";
+        }
+      }
+
+      button.addEventListener("click", async () => {
+        if (button.dataset.inCall === "true" && window._companhiaSdk) {
+          window._companhiaSdk.stopCall();
+          return;
+        }
+
+        await startCompanhiaCall();
+      });
+    </script>
+  </body>
+</html>
