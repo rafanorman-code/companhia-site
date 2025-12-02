@@ -1,9 +1,25 @@
 // netlify/functions/create-web-call.js
 
-// Node 18+ no Netlify já tem fetch global
-
 exports.handler = async (event) => {
-  // Só permite POST
+  // Se for GET, sÃ³ mostra debug das envs
+  if (event.httpMethod === "GET") {
+    const apiKey = process.env.RETELL_API_KEY || null;
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        hasApiKey: !!apiKey,
+        apiKeyPrefix: apiKey ? apiKey.slice(0, 10) : null,
+        envKeys: Object.keys(process.env),
+      }),
+    };
+  }
+
+  // SÃ³ permite POST para uso normal
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -14,14 +30,17 @@ exports.handler = async (event) => {
   try {
     const apiKey = process.env.RETELL_API_KEY;
     if (!apiKey) {
-      console.error("RETELL_API_KEY não configurada no Netlify");
+      console.error("RETELL_API_KEY nÃ£o configurada");
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "RETELL_API_KEY não configurada" }),
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ error: "RETELL_API_KEY nÃ£o configurada" }),
       };
     }
 
-    // Seu agente do Companhia
     const agentId = "agent_087b8a84fdc535a0974c9bb0f7";
 
     const response = await fetch(
@@ -32,12 +51,50 @@ exports.handler = async (event) => {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          agent_id: agentId,
-          // metadata: { user_id: "..." } se quiser mandar depois
-        }),
+        body: JSON.stringify({ agent_id: agentId }),
       }
     );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Erro da Retell:", data);
+      return {
+        statusCode: response.status,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          error: "Erro ao criar web call na Retell",
+          details: data,
+        }),
+      };
+    }
+
+    const { access_token, call_id } = data;
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ access_token, call_id }),
+    };
+  } catch (err) {
+    console.error("Erro no create-web-call:", err);
+    return {
+      statusCode: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ error: "Erro interno ao criar web call" }),
+    };
+  }
+};
+
 
     const data = await response.json();
 
