@@ -1,14 +1,27 @@
 // netlify/functions/create-web-call.js
 
 exports.handler = async (event) => {
-  // Só aceita POST
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+
+  // Responde o preflight CORS
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ ok: true }),
+    };
+  }
+
+  // Só aceita POST para uso normal
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
@@ -20,10 +33,7 @@ exports.handler = async (event) => {
       console.error("RETELL_API_KEY não configurada");
       return {
         statusCode: 500,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
+        headers,
         body: JSON.stringify({ error: "RETELL_API_KEY não configurada" }),
       };
     }
@@ -48,10 +58,7 @@ exports.handler = async (event) => {
       console.error("Erro da Retell:", data);
       return {
         statusCode: response.status,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
+        headers,
         body: JSON.stringify({
           error: "Erro ao criar web call na Retell",
           details: data,
@@ -63,20 +70,14 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ access_token, call_id }),
     };
   } catch (err) {
     console.error("Erro no create-web-call:", err);
     return {
       statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ error: "Erro interno ao criar web call" }),
     };
   }
