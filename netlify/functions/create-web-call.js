@@ -1,27 +1,7 @@
 // netlify/functions/create-web-call.js
 
-// Node 18+ no Netlify já tem fetch global
-
 exports.handler = async (event) => {
-  // Pega a variável de ambiente
-  const apiKey = process.env.RETELL_API_KEY || null;
-
-  // Se for GET (quando você abre direto no navegador), responde com debug
-  if (event.httpMethod === "GET") {
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        hasApiKey: !!apiKey,
-        apiKeyPrefix: apiKey ? apiKey.slice(0, 10) : null,
-      }),
-    };
-  }
-
-  // Para qualquer coisa que não seja POST, responde 405
+  // Só aceita POST
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -33,8 +13,9 @@ exports.handler = async (event) => {
     };
   }
 
-  // Daqui para baixo é o fluxo normal da chamada
   try {
+    const apiKey = process.env.RETELL_API_KEY || null;
+
     if (!apiKey) {
       console.error("RETELL_API_KEY não configurada");
       return {
